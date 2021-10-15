@@ -34,9 +34,11 @@ void delay(uint16_t time){
 }
 void pwm(uint16_t width){
     //set counter comparator
-    TIMER_A0->CCR[1] = width;
-    //set output mode to toggle
+    TIMER_A0->CCR[0] = width;
+    //set output mode to toggle (Change to something/reset)
     TIMER_A0->CCTL[1] = TIMER_A_CCTLN_OUTMOD_4;
+    //write some value to the CCR[1] that is less than width
+
     //reset timer
     TIMER_A0->CTL |= TIMER_A_CTL_CLR;
 }
