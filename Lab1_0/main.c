@@ -4,12 +4,74 @@
 /**
  * main.c
  */
+void init_timer(){
+    //write password
+    CS->KEY = CS_KEY_VAL;
+    //set frequency to 1.5 MHz
+    //CS->CTL0 = CS_CTL0_DCORSEL_0; //| (CS_CTL0_DCOTUNE_MASK & 0xFFFF);
+    //select DCO as clock source for signal SMCLK and divide by 128
+    CS->CTL1 = CS_CTL1_SELS__DCOCLK | CS_CTL1_DIVS_7;
+    //divide by 3
+    TIMER_A0->EX0 = TIMER_A_EX0_IDEX__3;
+    //divide by 8
+    TIMER_A0->CTL |= TIMER_A_CTL_ID__8;
+    //reset comparator
+    //TIMER_A0->CCTL[0] = 0;
+    //set timer to use SMCLK signal and set up mode (count up to comparator value)
+    TIMER_A0->CTL |= (TIMER_A_CTL_SSEL_MASK & TIMER_A_CTL_TASSEL_2) | (TIMER_A_CTL_MC_MASK & TIMER_A_CTL_MC_1);
+}
+void delay(uint16_t time){
+    //set counter comparator
+    TIMER_A0->CCR[0] = time;
+    //reset timer
+    TIMER_A0->CTL |= TIMER_A_CTL_CLR;
+    //wait until CCIFG flag is one
+    while(!(TIMER_A0->CCTL[0] & TIMER_A_CCTLN_CCIFG)){
+
+    }
+    //clear the CCIFG flag
+    TIMER_A0->CCTL[0] = TIMER_A0->CCTL[0] & !(TIMER_A_CCTLN_CCIFG);
+}
+void pwm(uint16_t width){
+    //set counter comparator
+    TIMER_A0->CCR[1] = width;
+    //set output mode to toggle
+    TIMER_A0->CCTL[1] = TIMER_A_CCTLN_OUTMOD_4;
+    //reset timer
+    TIMER_A0->CTL |= TIMER_A_CTL_CLR;
+}
+
 void main(void)
 {
-	WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;		// stop watchdog timer
+    WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;        // stop watchdog timer
+    P2->DIR= 0xFF;  //set Port 2 to output direction
+    P2->OUT = (0<<0);  //set bit 0 of port 2 (LED), clear others bits
+    //select primary module (T_0.1) to drive pin 4 in port 2
+    P2->SEL0 = (1<<4);
+    P2->SEL1 = (0<<4);
 
-	//configure clock
-	//CS->KEY = CS_KEY_VAL;
+    //uint32_t c = 3000000/(128*64);
+        //conv_time = time*c;
 
-	//configure IO
+    pwm(10);
+    init_timer();
+    int l = 0;
+
+    while(1) {
+        //P2->OUT ^= (1<<j);    // Toggles the bit 0 of the output register
+        //j = (j+1)%3;
+        //poll interrupt flag
+        //P2->OUT = (TIMER_A0->CCTL[1]<<4);
+        //P2->OUT ^= (1<<4);
+
+        //for(i=0; i<1000; i++);      // Wait
+        //int i;
+        //for(i=0; i<1000; i++){
+            //delay(10);
+        //}
+        //l = !l;
+        //P2->OUT= (l<<5)|(l<<0);  //toggle light
+
+    }
+
 }
