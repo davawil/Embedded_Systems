@@ -45,6 +45,28 @@ void pwm(uint16_t width){
     TIMER_A0->CTL |= TIMER_A_CTL_CLR;
 }
 
+void TA0_0_IRQHandler(void){
+    //clear the CCIFG flag
+    TIMER_A0->CCTL[0] &= ~(TIMER_A_CCTLN_CCIFG);
+    //toggle signal
+    P2->OUT ^= (1<<5);
+}
+void init_interrupt(){
+    NVIC_EnableIRQ(TA0_0_IRQn);
+    NVIC_SetPriority(TA0_0_IRQn,1);
+    //enable interrupts
+    TIMER_A0->CTL |= TIMER_A_CTL_IE;
+    TIMER_A0->CCTL[0] |= TIMER_A_CCTLN_CCIE;
+
+}
+void gen_interrupt(uint16_t width){
+    width = width * 78;
+    //set counter comparator
+    TIMER_A0->CCR[0] = width;
+    //reset timer
+    TIMER_A0->CTL |= TIMER_A_CTL_CLR;
+}
+
 void main(void)
 {
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;        // stop watchdog timer
@@ -57,8 +79,11 @@ void main(void)
     //uint32_t c = 3000000/(128*64);
         //conv_time = time*c;
 
-    pwm(2);
+    //pwm(2);
+    init_interrupt();
     init_timer();
+    gen_interrupt(5);
+
     int l = 0;
 
     while(1) {
