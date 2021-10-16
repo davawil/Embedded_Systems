@@ -14,7 +14,7 @@ void init_timer(){
     //divide by 3
     TIMER_A0->EX0 = TIMER_A_EX0_IDEX__3;
     //divide by 8
-    TIMER_A0->CTL |= TIMER_A_CTL_ID__8;
+    //TIMER_A0->CTL |= TIMER_A_CTL_ID__8;
     //reset comparator
     //TIMER_A0->CCTL[0] = 0;
     //set timer to use SMCLK signal and set up mode (count up to comparator value)
@@ -33,12 +33,14 @@ void delay(uint16_t time){
     TIMER_A0->CCTL[0] = TIMER_A0->CCTL[0] & !(TIMER_A_CCTLN_CCIFG);
 }
 void pwm(uint16_t width){
+    //convert to ms
+    width = width * 78;
     //set counter comparator
     TIMER_A0->CCR[0] = width;
     //set output mode to toggle (Change to something/reset)
-    TIMER_A0->CCTL[1] = TIMER_A_CCTLN_OUTMOD_4;
+    TIMER_A0->CCTL[1] = TIMER_A_CCTLN_OUTMOD_7;
     //write some value to the CCR[1] that is less than width
-
+    TIMER_A0->CCR[1] = width/2;
     //reset timer
     TIMER_A0->CTL |= TIMER_A_CTL_CLR;
 }
@@ -55,7 +57,7 @@ void main(void)
     //uint32_t c = 3000000/(128*64);
         //conv_time = time*c;
 
-    pwm(10);
+    pwm(2);
     init_timer();
     int l = 0;
 
