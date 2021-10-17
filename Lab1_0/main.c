@@ -67,6 +67,19 @@ void gen_interrupt(uint16_t width){
     TIMER_A0->CTL |= TIMER_A_CTL_CLR;
 }
 
+void init_analog(){
+    P5->DIR = 0;  //set Port 2 to input direction
+    P5->SEL0 = (1<<5);
+    P5->SEL1 = (0<<5);
+
+    //store converted signal from A0 in memory register 0
+    ADC14->CTL0 &= ~ADC14_CTL1_CSTARTADD_MASK;
+    ADC14->MCTL[0] = 0;
+
+    ADC14->CTL0 = ADC14_CTL0_SC | ADC14_CTL0_ENC | ADC14_CTL0_ON;
+
+}
+
 void main(void)
 {
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;        // stop watchdog timer
@@ -83,10 +96,12 @@ void main(void)
     init_interrupt();
     init_timer();
     gen_interrupt(5);
+    init_analog();
 
     int l = 0;
 
     while(1) {
+        int joy_in = ADC14->MEM[0];
         //P2->OUT ^= (1<<j);    // Toggles the bit 0 of the output register
         //j = (j+1)%3;
         //poll interrupt flag
