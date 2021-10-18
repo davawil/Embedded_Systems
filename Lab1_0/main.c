@@ -68,16 +68,20 @@ void gen_interrupt(uint16_t width){
 }
 
 void init_analog(){
-    P5->DIR = 0;  //set Port 2 to input direction
-    P5->SEL0 = (1<<5);
-    P5->SEL1 = (0<<5);
+    P4->DIR = 0;        //set Port 4 to input direction
+    P4->SEL0 = (1<<0);  //select secondary function for port 4.0
 
-    //store converted signal from A0 in memory register 0
-    ADC14->CTL0 &= ~ADC14_CTL1_CSTARTADD_MASK;
-    ADC14->MCTL[0] = 0;
+    //store converted signal from A13 in memory register 0
+    ADC14->MCTL[0] = ADC14_MCTLN_INCH_13;
 
-    ADC14->CTL0 = ADC14_CTL0_SC | ADC14_CTL0_ENC | ADC14_CTL0_ON;
+    //activate unit
+    ADC14->CTL0 = ADC14_CTL0_ON;
 
+    //ADC14->CTL0 |= ADC14_CTL0_SSEL__SMCLK;
+    //sample-hold-pulse mode
+    ADC14->CTL0 |= ADC14_CTL0_SHP;
+    //enable conversions
+    ADC14->CTL0 |= ADC14_CTL0_ENC;
 }
 
 void main(void)
@@ -86,16 +90,15 @@ void main(void)
     P2->DIR= 0xFF;  //set Port 2 to output direction
     P2->OUT = (0<<0);  //set bit 0 of port 2 (LED), clear others bits
     //select primary module (T_0.1) to drive pin 4 in port 2
-    P2->SEL0 = (1<<4);
-    P2->SEL1 = (0<<4);
+    //P2->SEL0 = (1<<4);
+    //P2->SEL1 = (0<<4);
 
     //uint32_t c = 3000000/(128*64);
         //conv_time = time*c;
 
     //pwm(2);
-    init_interrupt();
-    init_timer();
-    gen_interrupt(5);
+    //init_timer();
+    //gen_interrupt(5);
     init_analog();
 
     int l = 0;
@@ -115,6 +118,9 @@ void main(void)
         //}
         //l = !l;
         //P2->OUT= (l<<5)|(l<<0);  //toggle light
+        P2->OUT= joy_in;  //toggle light
+        //
+        ADC14->CTL0 |= ADC14_CTL0_SC;
 
     }
 
